@@ -36,10 +36,10 @@ mkSegment
 mkSegment base file =
   bufferRight (header Nothing) (input fullP) `catch`
     \(e :: SomeException) -> do
-      err $ format
+      eprintf
         ("WARNING: Cannot read in "%fp%" as text file\n"
           %w%"\n"
-          %"...Falling back to binary input")
+          %"...Falling back to binary input\n")
         file e
       bufferRight (header (Just "BASE64"))
         (unsafeTextToLine . T.decodeUtf8 . B64.encode <$> TB.input fullP)
@@ -95,8 +95,8 @@ findFiles path = do
 main :: IO ()
 main = do
   conf@Config{..} <- options "hsfiles Generator" confParser
-  echo $ "Config: " <> T.pack (show conf)
+  printf ("Config: "%w%"\n") conf
   directOutput outputDest $ do
     file <- findFiles inputDir
-    echo . fromEither . toText $ file
+    echo . unsafeTextToLine . fromEither . toText $ file
     mkSegment inputDir file
